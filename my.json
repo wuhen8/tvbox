@@ -1,6 +1,15 @@
 {
   "sites": [
     {
+      "key": "suoni",
+      "name": "索尼",
+      "type": 1,
+      "api": "https://xsd.sdzyapi.com/api.php/provide/vod/from/sdm3u8/",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
       "key": "91md",
       "name": "🐞91麻豆",
       "type": 1,
