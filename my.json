@@ -15,7 +15,7 @@
       "name": "*色猫",
       "type": 0,
       "api": "https://api.maozyapi.com/inc/api.php/provide/vod/at/xml/",
-      "playUrl": "https://jx.kujiexi.net/m3u8.php?url=",
+      "playUrl": "https://www.playm3u8.cn/jiexi.php?url=",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
