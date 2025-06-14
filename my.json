@@ -5,6 +5,7 @@
       "name": "🐞91麻豆",
       "type": 1,
       "api": "http://mdapp5.com/api.php/provide/vod/from/mdm3u8/",
+      "playUrl": "https://www.playm3u8.cn/jiexi.php?url=",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
