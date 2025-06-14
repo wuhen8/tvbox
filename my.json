@@ -10,6 +10,15 @@
       "filterable": 0
     },
     {
+      "key": "heimuer",
+      "name": "黑木耳",
+      "type": 1,
+      "api": "https://json02.heimuer.xyz/api.php/provide/vod/from/heimuer/",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
       "key": "91md",
       "name": "🐞91麻豆",
       "type": 1,
