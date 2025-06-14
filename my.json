@@ -1,6 +1,24 @@
 {
   "sites": [
     {
+      "key": "ffzy",
+      "name": "非凡",
+      "type": 1,
+      "api": "http://api.ffzyapi.com/api.php/provide/vod/from/ffm3u8",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "1080zyk",
+      "name": "1080",
+      "type": 1,
+      "api": "https://api.yzzy-api.com/inc/api_mac10.php/provide/vod/from/1080zyk",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
       "key": "suoni",
       "name": "索尼",
       "type": 1,
