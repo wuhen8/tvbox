@@ -14,7 +14,7 @@ import {Spider} from "./spider.js";
 class HsCangkuSpider extends Spider {
     constructor() {
         super();
-        this.siteUrl = "https://hsck12.shop/"
+        this.siteUrl = "http://775019.xyz/"
     }
 
     getName() {
