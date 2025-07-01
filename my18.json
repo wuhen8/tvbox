@@ -19,6 +19,15 @@
       "filterable": 0
     },
     {
+      "key": "xvideos",
+      "name": "xvidoes",
+      "type": 1,
+      "api": "https://xapi.686870.xyz/x.php",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
       "key": "maozyapi",
       "name": "*色猫",
       "type": 0,
