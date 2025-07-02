@@ -1,4 +1,6 @@
-import cheerio from 'cheerio';
+// Updated for Vercel Edge Functions — cheerio must be imported properly
+import * as cheerioModule from 'cheerio';
+const cheerio = /** @type {typeof import('cheerio')} */ (cheerioModule);
 
 export const config = {
   runtime: 'edge',
@@ -9,8 +11,8 @@ async function fetchUrl(url) {
     headers: {
       'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
-      Referer: 'https://www.xvideos.com/',
-      Cookie: 'session_ath=black;',
+      'Referer': 'https://www.xvideos.com/',
+      'Cookie': 'session_ath=black;',
     },
   });
   return await res.text();
