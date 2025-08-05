@@ -1,4 +1,5 @@
 {
+  "spider":"./jar/pg.jar;md5;fcd3be29030c912a28d7a205a88f749d",
   "sites": [
     {
       "key": "91md",
@@ -13,7 +14,7 @@
       "key": "hsck",
       "name": "黄色仓库",
       "type": 1,
-      "api": "http://337048.xyz/api.php/provide/vod/from/dplayer/",
+      "api": "http://337059.xyz/api.php/provide/vod/from/dplayer/",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
