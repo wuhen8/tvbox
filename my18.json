@@ -14,7 +14,7 @@
       "key": "hsck",
       "name": "黄色仓库",
       "type": 1,
-      "api": "https://hck.686870.xyz/api.php/provide/vod/",
+      "api": "https://tools.686860.xyz:9000/hsk.php/provide/vod/",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
