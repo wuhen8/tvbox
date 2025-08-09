@@ -20,15 +20,6 @@
       "filterable": 0
     },
     {
-      "key": "mhsck",
-      "name": "m黄色仓库",
-      "type": 1,
-      "api": "https://tools.686860.xyz:9000/hsk.php/provide/vod/from/mdm3u8/dplayer/",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 0
-    },
-    {
       "key": "xvideos",
       "name": "xvidoes",
       "type": 1,
