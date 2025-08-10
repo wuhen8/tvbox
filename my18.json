@@ -5,7 +5,7 @@
       "key": "91md",
       "name": "🐞91麻豆",
       "type": 1,
-      "api": "http://mdapp5.com/api.php/provide/vod/from/mdm3u8/",
+      "api": "https://www.md91.cc/api.php/provide/vod/from/mahua/",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
@@ -32,7 +32,7 @@
       "key": "maozyapi",
       "name": "*色猫",
       "type": 0,
-      "api": "https://api.maozyapi.com/inc/api.php/provide/vod/at/xml/",
+      "api": "https://caiji.semaozy.net/inc/api.php/provide/vod/at/xml/",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
