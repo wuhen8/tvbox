@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest      
     steps:
       - name: Checkout the branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: wget the xiaosa 
         run: |
@@ -47,7 +47,7 @@ jobs:
           git config --local user.email "87984115+github-actions[bot]@users.noreply.github.com"
           git add .
           if ! git diff-index --quiet HEAD --; then
-            git commit -m "潇洒更新 $(date +%Y%m%d%H%M)"
+            git commit -m "更新源 $(date +%Y%m%d%H%M)"
             git push -f origin master
           else
             echo "没有文件更新，不执行 git push"
