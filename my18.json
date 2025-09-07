@@ -2,10 +2,10 @@
   "spider":"./jar/pg.jar;md5;fcd3be29030c912a28d7a205a88f749d",
   "sites": [
      {
-      "key": "njav",
-      "name": "njav",
+      "key": "huangsecangku",
+      "name": "黄色仓库",
       "type": 1,
-      "api": "https://91md.me/api.php/provide/vod/from/mahua/",
+      "api": "https://huangsecangku.net/api.php/provide/vod/from/dplayer/",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
@@ -21,9 +21,9 @@
     },
     {
       "key": "hsck",
-      "name": "黄色仓库",
+      "name": "黄色仓库1",
       "type": 1,
-      "api": "https://hck.686870.xyz/api.php/provide/vod/from/dplayer/",
+      "api": "https://cors.686870.xyz/?url=https://huangsecangku.net/api.php/provide/vod/from/dplayer/",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
