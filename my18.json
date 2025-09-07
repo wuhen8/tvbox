@@ -1,6 +1,15 @@
 {
   "spider":"./jar/pg.jar;md5;fcd3be29030c912a28d7a205a88f749d",
   "sites": [
+     {
+      "key": "njav",
+      "name": "njav",
+      "type": 1,
+      "api": "https://njav.sbs/api.php/provide/vod/from/mahua/",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
     {
       "key": "91md",
       "name": "🐞91麻豆",
