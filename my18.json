@@ -38,6 +38,15 @@
       "filterable": 0
     },
     {
+      "key": "yutu",
+      "name": "玉兔",
+      "type": 1,
+      "api": "https://apiyutu.com/api.php/provide/vod/from/ytm3u8/",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
       "key": "xvideos",
       "name": "xvidoes",
       "type": 1,
