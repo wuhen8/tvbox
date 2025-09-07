@@ -23,7 +23,16 @@
       "key": "hsck",
       "name": "黄色仓库",
       "type": 1,
-      "api": "https://hck.686870.xyz/api.php/provide/vod/from/mdm3u8/dplayer/",
+      "api": "https://hck.686870.xyz/api.php/provide/vod/from/dplayer/",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0
+    },
+    {
+      "key": "xzybb1",
+      "name": "杏资源",
+      "type": 1,
+      "api": "https://xzybb1.com/api.php/provide/vod/from/s8m3u8/",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
