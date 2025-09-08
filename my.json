@@ -23,7 +23,7 @@
       "key": "1080zyk",
       "name": "1080",
       "type": 1,
-      "api": "https://api.yzzy-api.com/inc/api_mac10.php/provide/vod/from/1080zyk",
+      "api": "https://api.yzzy-api.com/inc/api_mac10.php/",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 0
