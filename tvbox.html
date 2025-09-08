@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动态多源 M3U8 播放器</title>
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+    <style>
+        :root { --primary-color: #007bff; --primary-hover: #0056b3; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+        .container, .list-container { width: 100%; max-width: 800px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; padding: 20px; position: relative; }
+        .input-container { display: flex; gap: 10px; margin-bottom: 15px; }
+        .video-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; min-width: 0; }
+        .play-button { padding: 10px 20px; border: none; background-color: var(--primary-color); color: white; border-radius: 4px; font-size: 16px; cursor: pointer; transition: background-color 0.2s; white-space: nowrap; }
+        .play-button:hover { background-color: var(--primary-hover); }
+        .play-button:disabled { background-color: #ccc; cursor: not-allowed; }
+        #statusMessage { text-align: center; color: #555; font-size: 0.9em; margin-bottom: 15px; min-height: 1.2em; }
+        #videoTitle { font-size: 1.2em; font-weight: bold; text-align: center; margin-bottom: 5px; }
+        .video-wrapper { width: 100%; background-color: #000; }
+        .video-js { width: 100% !important; height: auto !important; }
+        .episode-container { margin-top: 20px; display: none; }
+        .episode-title { margin-bottom: 10px; font-size: 1.1em; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .episode-list { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+        .episode-item { padding: 8px 12px; background-color: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.2s; font-size: 0.9em; }
+        .episode-item:hover { background-color: #e0e0e0; }
+        .episode-item.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); font-weight: bold; }
+        .video-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; margin-top: 20px; }
+        .video-card { cursor: pointer; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.08); transition: transform 0.2s, box-shadow 0.2s; }
+        .video-card:hover { transform: translateY(-5px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+        .video-card img { width: 100%; height: 180px; object-fit: cover; background-color: #eee; display: block; }
+        .video-card-title { font-size: 0.9em; padding: 8px; text-align: center; background: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; }
+        #pageInfo { font-size: 1em; color: #333; }
+        
+        /* --- MODIFIED: 标题与设置按钮布局 --- */
+        .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .header-container h1 { margin: 0; font-size: 1.8em; }
+
+
+        /* --- MODIFIED: 调整合并后输入框的宽度比例 --- */
+        #apiSourceSelect { flex: 3 1 0; } /* 占据更多空间 */
+        #videoIdInput { flex: 2 1 0; } /* 占据较少空间 */
+
+        /* --- 弹窗 (Modal) 样式 --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
+        .modal-content { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); width: 90%; max-width: 500px; position: relative; transform: translateY(-30px); transition: transform 0.3s; }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-overlay.visible .modal-content { transform: translateY(0); }
+        .modal-close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #888; }
+        .modal-close-btn:hover { color: #333; }
+        .modal-content h2 { margin-top: 0; margin-bottom: 20px; }
+        .modal-content .input-container { flex-direction: column; gap: 5px; }
+        .modal-content label { margin-bottom: 5px; font-weight: 500; font-size: 0.9em; }
+        .modal-content .video-input { width: 100%; box-sizing: border-box; }
+        .modal-content .play-button { width: 100%; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="player-section">
+        <!-- MODIFIED: 新的标题/设置按钮结构 -->
+        <div class="header-container">
+            <button id="settingsBtn" class="play-button">源设置</button>
+            <h1>M3U8 播放器</h1>
+        </div>
+        
+        <!-- MODIFIED: 合并后的输入行 -->
+        <div class="input-container">
+            <select id="apiSourceSelect" class="video-input" title="选择API源"></select>
+            <input type="text" id="videoIdInput" class="video-input" placeholder="输入视频 ID">
+            <button id="playBtn" class="play-button">播放</button>
+        </div>
+
+        <p id="statusMessage"></p>
+        <h2 id="videoTitle"></h2>
+        <div class="video-wrapper">
+            <video id="my-video" class="video-js vjs-default-skin vjs-big-play-centered vjs-16-9" controls preload="auto"></video>
+        </div>
+        <div id="episodeContainer" class="episode-container">
+            <h3 class="episode-title">剧集列表</h3>
+            <ul id="episodeList" class="episode-list"></ul>
+        </div>
+    </div>
+
+    <!-- 设置弹窗 HTML 结构 (保持不变) -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="modalCloseBtn" class="modal-close-btn">&times;</button>
+            <h2>配置源地址</h2>
+            <div class="input-container">
+                <label for="workerUrlInput">CORS Worker 代理地址:</label>
+                <input type="text" id="workerUrlInput" class="video-input" placeholder="https://example.workers.dev/">
+            </div>
+            <div class="input-container">
+                <label for="sourceListInput">源列表 JSON 地址:</label>
+                <input type="text" id="sourceListInput" class="video-input" placeholder="https://example.com/sources.json">
+            </div>
+            <button id="saveAndLoadBtn" class="play-button">保存并加载</button>
+        </div>
+    </div>
+
+    <div class="list-container">
+        <h2>视频列表浏览器</h2>
+        <div class="input-container">
+            <input type="text" id="searchInput" class="video-input" placeholder="输入关键词搜索">
+            <button id="searchBtn" class="play-button">搜索</button>
+        </div>
+        <div class="input-container">
+            <select id="categorySelect" class="video-input" title="或选择视频分类"></select>
+			<button id="loadCategoriesBtn" class="play-button" title="重新加载分类列表">重载分类</button>
+            <button id="getListBtn" class="play-button">浏览分类</button>
+        </div>
+        <div id="videoList" class="video-list"></div>
+        <div id="pagination" class="pagination" style="display: none;">
+            <button id="prevPageBtn" class="play-button">上一页</button>
+            <span id="pageInfo"></span>
+            <button id="nextPageBtn" class="play-button">下一页</button>
+        </div>
+    </div>
+
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script>
+        // --- 1. 全局配置与状态变量 ---
+        
+        // DOM 元素
+        const settingsBtn = document.getElementById('settingsBtn'),
+            settingsModal = document.getElementById('settingsModal'),
+            modalCloseBtn = document.getElementById('modalCloseBtn'),
+            saveAndLoadBtn = document.getElementById('saveAndLoadBtn'),
+            workerUrlInput = document.getElementById('workerUrlInput'),
+            sourceListInput = document.getElementById('sourceListInput'),
+            apiSourceSelect = document.getElementById('apiSourceSelect'), videoIdInput = document.getElementById('videoIdInput'),
+            playBtn = document.getElementById('playBtn'), statusMessage = document.getElementById('statusMessage'),
+            videoTitle = document.getElementById('videoTitle'), 
+            episodeContainer = document.getElementById('episodeContainer'), episodeList = document.getElementById('episodeList'),
+            searchInput = document.getElementById('searchInput'), searchBtn = document.getElementById('searchBtn'),
+            categorySelect = document.getElementById('categorySelect'), getListBtn = document.getElementById('getListBtn'),
+			loadCategoriesBtn = document.getElementById('loadCategoriesBtn'),
+            videoListContainer = document.getElementById('videoList'), paginationContainer = document.getElementById('pagination'),
+            prevPageBtn = document.getElementById('prevPageBtn'), nextPageBtn = document.getElementById('nextPageBtn'),
+            pageInfo = document.getElementById('pageInfo'), playerSection = document.getElementById('player-section');
+
+        let currentPlaylist = [], currentEpisodeIndex = -1, currentPage = 1, totalPages = 1;
+        let videoListCache = {};
+        let currentListMode = 'category';
+        let lastSearchKeyword = '';
+        const player = videojs('my-video', { controls: true, autoplay: false, preload: 'auto', fluid: true });
+
+        // --- 2. 弹窗控制逻辑 ---
+        function openSettingsModal() {
+            workerUrlInput.value = localStorage.getItem('workerUrl');
+            sourceListInput.value = localStorage.getItem('sourceListUrl') || '';
+            settingsModal.classList.add('visible');
+        }
+
+        function closeSettingsModal() {
+            settingsModal.classList.remove('visible');
+        }
+
+        // --- 3. 初始化与数据加载逻辑 ---
+        
+        function initializeApp() {
+            const savedWorkerUrl = localStorage.getItem('workerUrl');
+            const savedSourceListUrl = localStorage.getItem('sourceListUrl');
+            
+            if (!savedWorkerUrl || !savedSourceListUrl) {
+                openSettingsModal();
+            } else {
+                workerUrlInput.value = savedWorkerUrl;
+                sourceListInput.value = savedSourceListUrl;
+                loadApiSources();
+            }
+        }
+
+        async function loadApiSources() {
+            const workerUrl = workerUrlInput.value.trim();
+            const sourceListUrl = sourceListInput.value.trim();
+            if (!workerUrl) { alert('请输入 Worker 代理地址！'); openSettingsModal(); return; }
+            if (!sourceListUrl) { alert('请输入源列表地址！'); openSettingsModal(); return; }
+
+            localStorage.setItem('workerUrl', workerUrl);
+            localStorage.setItem('sourceListUrl', sourceListUrl);
+            videoListContainer.innerHTML = ''; paginationContainer.style.display = 'none'; searchInput.value = '';
+
+            try {
+                statusMessage.textContent = '正在加载 API 源列表...';
+                const requestUrl = `${workerUrl}?url=${encodeURIComponent(sourceListUrl)}`;
+                const response = await fetch(requestUrl);
+                if (!response.ok) throw new Error(`加载源列表失败 (状态: ${response.status})`);
+                const data = await response.json();
+                const validSources = data.sites.filter(site => site.type === 1);
+                if (validSources.length === 0) throw new Error('未找到有效的 API 源 (type=1)');
+                
+                apiSourceSelect.innerHTML = '';
+                validSources.forEach(source => {
+                    const option = document.createElement('option');
+                    let cleanApiUrl = source.api;
+                    const queryIndex = cleanApiUrl.indexOf('?');
+                    if (queryIndex !== -1) cleanApiUrl = cleanApiUrl.substring(0, queryIndex);
+                    option.value = cleanApiUrl;
+                    option.textContent = source.name;
+                    apiSourceSelect.appendChild(option);
+                });
+                
+                const savedApiUrl = localStorage.getItem('userApiUrl');
+                if (savedApiUrl) apiSourceSelect.value = savedApiUrl;
+                
+                statusMessage.textContent = 'API 源加载完成。';
+                closeSettingsModal();
+                await loadCategoriesForSource();
+            } catch (error) {
+                statusMessage.textContent = `加载源列表失败: ${error.message}`;
+                apiSourceSelect.innerHTML = '<option>加载失败</option>';
+            }
+        }
+
+        async function loadCategoriesForSource() {
+            const workerUrl = localStorage.getItem('workerUrl');
+            const baseApiUrl = apiSourceSelect.value;
+            if (!baseApiUrl || !workerUrl) return;
+            
+            categorySelect.innerHTML = '<option>正在加载分类...</option>';
+            getListBtn.disabled = true;
+            videoListContainer.innerHTML = '';
+            paginationContainer.style.display = 'none';
+
+            try {
+                const requestUrl = `${workerUrl}?url=${encodeURIComponent(baseApiUrl)}`;
+                const response = await fetch(requestUrl);
+                if (!response.ok) throw new Error(`请求分类失败 (状态: ${response.status})`);
+                const data = await response.json();
+                if (!data.class || data.class.length === 0) throw new Error('此源未提供分类列表');
+
+                categorySelect.innerHTML = '';
+                data.class.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.type_id;
+                    option.textContent = cat.type_name;
+                    categorySelect.appendChild(option);
+                });
+            } catch (error) {
+                categorySelect.innerHTML = `<option value="">${error.message}</option>`;
+            } finally {
+                getListBtn.disabled = false;
+            }
+        }
+
+        async function fetchData(params, page = 1) {
+            const workerUrl = localStorage.getItem('workerUrl');
+            const baseApiUrl = apiSourceSelect.value;
+            if (!workerUrl) { statusMessage.textContent = '请先配置代理地址！'; openSettingsModal(); return; }
+            videoListContainer.innerHTML = '<p>正在加载...</p>';
+            paginationContainer.style.display = 'none';
+
+            try {
+                const separator = baseApiUrl.includes('?') ? '&' : '?';
+                let queryParams = `ac=detail&pg=${page}`;
+                for (const key in params) {
+                    queryParams += `&${key}=${encodeURIComponent(params[key])}`;
+                }
+                const targetUrl = `${baseApiUrl}${separator}${queryParams}`;
+                const requestUrl = `${workerUrl}?url=${encodeURIComponent(targetUrl)}`;
+
+                const response = await fetch(requestUrl);
+                if (!response.ok) throw new Error(`请求失败 (状态: ${response.status})`);
+                const data = await response.json();
+                if (data.code !== 1 || !data.list) throw new Error(data.msg || '列表为空或获取失败');
+
+                currentPage = parseInt(data.page, 10);
+                totalPages = parseInt(data.pagecount, 10);
+                videoListCache = {};
+                data.list.forEach(video => { videoListCache[video.vod_id] = video; });
+                
+                renderVideoList(data.list);
+                renderPagination();
+            } catch (error) {
+                videoListContainer.innerHTML = `<p style="color: red;">加载失败: ${error.message}</p>`;
+            }
+        }
+        
+        async function fetchVideoList(page = 1) {
+            currentListMode = 'category';
+            const categoryId = categorySelect.value;
+            if (!categoryId) { alert('请先选择一个有效的分类！'); return; }
+            await fetchData({ t: categoryId }, page);
+        }
+
+        async function searchVideos(page = 1) {
+            const keyword = searchInput.value.trim();
+            if (!keyword) { alert('请输入搜索关键词！'); return; }
+            currentListMode = 'search';
+            lastSearchKeyword = keyword;
+            await fetchData({ wd: keyword }, page);
+        }
+
+        function renderVideoList(videos) {
+            if (videos.length === 0) {
+                videoListContainer.innerHTML = '<p>未找到相关视频。</p>'; return;
+            }
+            videoListContainer.innerHTML = '';
+            videos.forEach(video => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.dataset.id = video.vod_id;
+                card.innerHTML = `
+                    <img src="${video.vod_pic}" alt="${video.vod_name}" onerror="this.src='https://via.placeholder.com/130x180.png?text=No+Image'">
+                    <div class="video-card-title">${video.vod_name}</div>`;
+                card.addEventListener('click', () => playVideoFromData(video.vod_id));
+                videoListContainer.appendChild(card);
+            });
+        }
+
+        function renderPagination() {
+            if (totalPages <= 1) {
+                paginationContainer.style.display = 'none'; return;
+            }
+            paginationContainer.style.display = 'flex';
+            pageInfo.textContent = `第 ${currentPage} / ${totalPages} 页`;
+            prevPageBtn.disabled = currentPage <= 1;
+            nextPageBtn.disabled = currentPage >= totalPages;
+        }
+
+        function renderEpisodeList() {
+            episodeList.innerHTML = '';
+            currentPlaylist.forEach((episode, index) => {
+                const li = document.createElement('li');
+                li.className = 'episode-item';
+                li.textContent = episode.name;
+                li.dataset.index = index;
+                li.addEventListener('click', () => playEpisode(index));
+                episodeList.appendChild(li);
+            });
+        }
+        
+        function updateResolution() {
+            const width = player.videoWidth(), height = player.videoHeight();
+            if (width > 0 && height > 0) {
+				statusMessage.textContent += ` 当前分辨率: ${width} x ${height}P`;
+            }
+        }
+        
+        function playVideoFromData(videoId) {
+            const videoInfo = videoListCache[videoId];
+            if (!videoInfo) {
+                statusMessage.textContent = '错误：未在缓存中找到视频数据。';
+                videoIdInput.value = videoId; return;
+            }
+            videoIdInput.value = videoId;
+            playerSection.scrollIntoView({ behavior: 'smooth' });
+
+            statusMessage.textContent = '正在准备播放...';
+            videoTitle.textContent = videoInfo.vod_name;
+            episodeContainer.style.display = 'none';
+            player.reset();
+            
+            const playUrlString = videoInfo.vod_play_url;
+            if (playUrlString.includes('#')) {
+                currentPlaylist = playUrlString.split('#').map(item => { const parts = item.split('$'); return (parts.length === 2) ? { name: parts[0], url: parts[1] } : null; }).filter(Boolean);
+            } else if (playUrlString.includes('$')) {
+                const parts = playUrlString.split('$');
+                currentPlaylist = [{ name: parts[0] || '正片', url: parts[1] }];
+            } else if (playUrlString.startsWith('http')) {
+                currentPlaylist = [{ name: '正片', url: playUrlString }];
+            } else {
+                statusMessage.textContent = `播放失败: 无法解析播放地址格式`; return;
+            }
+
+            if (currentPlaylist.length === 0) { statusMessage.textContent = `播放失败: 无法解析播放地址`; return; }
+            if (currentPlaylist.length > 1) { renderEpisodeList(); episodeContainer.style.display = 'block'; }
+            playEpisode(0);
+        }
+
+        async function loadAndPlayVideo() {
+            const workerUrl = localStorage.getItem('workerUrl');
+            const videoId = videoIdInput.value.trim();
+            const baseApiUrl = apiSourceSelect.value;
+            if (!workerUrl) { statusMessage.textContent = '请先配置代理地址！'; openSettingsModal(); return; }
+            if (!videoId) { statusMessage.textContent = '请输入视频 ID！'; return; }
+            if (!baseApiUrl) { statusMessage.textContent = '请选择一个 API 源！'; return; }
+
+            localStorage.setItem('userApiUrl', baseApiUrl);
+            statusMessage.textContent = '正在请求数据...';
+            player.reset();
+
+            const separator = baseApiUrl.includes('?') ? '&' : '?';
+            const targetApiUrl = `${baseApiUrl}${separator}ac=detail&ids=${videoId}`;
+            const apiUrl = `${workerUrl}?url=${encodeURIComponent(targetApiUrl)}`;
+            try {
+                const response = await fetch(apiUrl); if (!response.ok) throw new Error(`网络错误: ${response.status}`);
+                const data = await response.json(); if (data.code !== 1 || !data.list || data.list.length === 0) throw new Error(data.msg || '未找到视频资源或ID无效');
+                const videoInfo = data.list[0];
+                videoListCache[videoInfo.vod_id] = videoInfo;
+                playVideoFromData(videoInfo.vod_id);
+            } catch (error) {
+                console.error('播放失败:', error);
+                statusMessage.textContent = `播放失败: ${error.message}`;
+            }
+        }
+        
+        function playEpisode(index) {
+            if (index < 0 || index >= currentPlaylist.length) return;
+            currentEpisodeIndex = index;
+            const episode = currentPlaylist[index];
+            statusMessage.textContent = `正在加载: ${episode.name}`;
+            player.src({ src: episode.url, type: 'application/x-mpegURL' });
+            player.play();
+            document.querySelectorAll('.episode-item').forEach(item => item.classList.remove('active'));
+            const activeItem = document.querySelector(`.episode-item[data-index="${index}"]`);
+            if (activeItem) activeItem.classList.add('active');
+        }
+
+        // --- 4. 事件绑定 ---
+        document.addEventListener('DOMContentLoaded', initializeApp);
+        
+        settingsBtn.addEventListener('click', openSettingsModal);
+        modalCloseBtn.addEventListener('click', closeSettingsModal);
+        settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeSettingsModal(); });
+        saveAndLoadBtn.addEventListener('click', loadApiSources);
+        
+        apiSourceSelect.addEventListener('change', loadCategoriesForSource);
+		loadCategoriesBtn.addEventListener('click', loadCategoriesForSource);
+        playBtn.addEventListener('click', loadAndPlayVideo);
+        videoIdInput.addEventListener('keydown', e => e.key === 'Enter' && playBtn.click());
+        searchBtn.addEventListener('click', () => searchVideos(1));
+        searchInput.addEventListener('keydown', e => e.key === 'Enter' && searchBtn.click());
+        getListBtn.addEventListener('click', () => fetchVideoList(1));
+        prevPageBtn.addEventListener('click', () => { (currentListMode === 'search') ? searchVideos(currentPage - 1) : fetchVideoList(currentPage - 1); });
+        nextPageBtn.addEventListener('click', () => { (currentListMode === 'search') ? searchVideos(currentPage + 1) : fetchVideoList(currentPage + 1); });
+        
+        player.on('loadedmetadata', updateResolution);
+        player.on('ended', () => {
+            const nextIndex = currentEpisodeIndex + 1;
+            if (nextIndex < currentPlaylist.length) {
+                statusMessage.textContent = '即将播放下一集...';
+                playEpisode(nextIndex);
+            } else if (currentPlaylist.length > 1) {
+                statusMessage.textContent = '全剧播放完毕！';
+            }
+        });
+    </script>
+</body>
+</html>
