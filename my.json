@@ -1,6 +1,14 @@
 {
-  "spider":"./jar/pg.jar;md5;fcd3be29030c912a28d7a205a88f749d",
+  "spider":"./jar/1.jar;md5;fcd3be29030c912a28d7a205a88f749d",
   "sites": [
+    {
+      "key":"玩偶",
+      "name":"👽玩偶哥哥┃4K弹幕",
+      "type":3,"api":"csp_WoGGGuard",
+      "searchable":1,"quickSearch":1,
+      "changeable":0,
+      "ext":{"Cloud-drive":"tvfan/Cloud-drive.txt","from":"4k|auto","siteUrl":"https://www.wogg.com/","danMu":"弹"}
+    },
     {
       "key": "ffzy",
       "name": "非凡",
