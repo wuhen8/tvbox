@@ -1,5 +1,5 @@
 {
-  "spider":"https://coss.yupoo.com/upchat/2025-10-15/1760514839339.jpg;md5;88cb103cc0693dbc8e30539714362e2d",
+  "spider":"./jar/spider.jar;md5;88cb103cc0693dbc8e30539714362e2d",
   "sites": [
     {
       "key":"玩偶",
