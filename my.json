@@ -1,5 +1,5 @@
 {
-  "spider":"./jar/spider.jar;md5;88cb103cc0693dbc8e30539714362e2d",
+  "spider":"./jar/pg.jar;md5;fcd3be29030c912a28d7a205a88f749d",
   "sites": [
     {
       "key":"玩偶",
